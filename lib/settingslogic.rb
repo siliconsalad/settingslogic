@@ -90,6 +90,7 @@ class Settingslogic < Hash
   #   Settings.new("application.yaml") # will look for application.yaml
   #   Settings.new("/var/configs/application.yml") # will look for /var/configs/application.yml
   #   Settings.new(:config1 => 1, :config2 => 2)
+  #   Settings.new(["defaults.yml", "test.yml"]) # will look for defaults.yml and test.yml and merge them
   #
   # Basically if you pass a symbol it will look for that file in the configs directory of your rails app,
   # if you are using this in rails. If you pass a string it should be an absolute path to your settings file.
@@ -101,6 +102,10 @@ class Settingslogic < Hash
       raise Errno::ENOENT, "No file specified as Settingslogic source"
     when Hash
       self.replace hash_or_file
+    when Array
+      hash = hash_or_file.inject({}){|sum, file| sum.merge!(YAML.load(ERB.new(File.read(file)).result).to_hash)}
+      hash = hash[self.class.namespace] if self.class.namespace
+      self.replace hash
     else
       hash = YAML.load(ERB.new(File.read(hash_or_file)).result).to_hash
       hash = hash[self.class.namespace] if self.class.namespace
