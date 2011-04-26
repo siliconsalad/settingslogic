@@ -139,6 +139,21 @@ Finally, you can reload all your settings later as well:
 
 This is useful if you want to support changing your settings YAML without restarting your app.
 
+== Array of source files (Santuxus change)
+
+This change allows you to set multiple source files. The main purpose behind adding it was to avoid the huge size of
+application.yml. Now you can simply have 'defaults.yml', 'production.yml', 'development.yml' and so on. In your class
+you can have something like:
+
+  class Settings < Settingslogic
+    source ["#{Rails.root}/config/settings/defaults.yml", "#{Rails.root}/config/settings/#{Rails.env}.yml"]
+  end
+
+Sources are merged in the same order as they are positioned in the array; later settings overwrite earlier ones.
+This solution is somehow equivalent to namespaces, but allows to separate source in different files (thus namespaces
+don't provide any advantage here).
+
+
 == Author
 
 Copyright (c) 2008-2010 {Ben Johnson}[http://github.com/binarylogic] of {Binary Logic}[http://www.binarylogic.com],
