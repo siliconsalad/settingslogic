@@ -107,6 +107,13 @@ describe "Settingslogic" do
     e.should_not be_nil
   end
 
+  it "should accept an array of file names as a source argument and load all of them" do
+    Settings4.setting1.setting1_child.should == "saweet"
+    Settings4.setting2.should == "overwritten!"
+    Settings4.setting4.should == "from settings2.yml"
+    Settings4.another_setting.should == "from settings3.yml"
+  end
+
   # This one edge case currently does not pass, because it requires very
   # esoteric code in order to make it pass.  It was judged not worth fixing,
   # as it introduces significant complexity for minor gain.
