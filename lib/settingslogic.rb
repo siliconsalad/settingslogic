@@ -96,7 +96,21 @@ class Settingslogic < Hash
   # if you are using this in rails. If you pass a string it should be an absolute path to your settings file.
   # Then you can pass a hash, and it just allows you to access the hash via methods.
   def initialize(hash_or_file = self.class.source, section = nil)
-    #puts "new! #{hash_or_file}"
+    load_source(hash_or_file, section)
+  end
+
+  # Initializes a new settings object. You can initialize an object in any of the following ways:
+  #
+  #   Settings.load_source(:application) # will look for config/application.yml
+  #   Settings.load_source("application.yaml") # will look for application.yaml
+  #   Settings.load_source("/var/configs/application.yml") # will look for /var/configs/application.yml
+  #   Settings.load_source(:config1 => 1, :config2 => 2)
+  #   Settings.load_source(["defaults.yml", "test.yml"]) # will look for defaults.yml and test.yml and merge them
+  #
+  # Basically if you pass a symbol it will look for that file in the configs directory of your rails app,
+  # if you are using this in rails. If you pass a string it should be an absolute path to your settings file.
+  # Then you can pass a hash, and it just allows you to access the hash via methods.
+  def load_source(hash_or_file, section = nil)
     case hash_or_file
     when nil
       raise Errno::ENOENT, "No file specified as Settingslogic source"
