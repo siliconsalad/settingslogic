@@ -105,7 +105,7 @@ class Settingslogic < Hash
     when Array
       hash = hash_or_file.inject({}){|sum, file| File.exists?(file) ? sum.merge!(YAML.load(ERB.new(File.read(file)).result).to_hash) : sum}
       hash = hash[self.class.namespace] if self.class.namespace
-      self.replace hash
+      self.merge! hash
     else
       hash = YAML.load(ERB.new(File.read(hash_or_file)).result).to_hash
       hash = hash[self.class.namespace] if self.class.namespace
