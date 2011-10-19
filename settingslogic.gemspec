@@ -28,8 +28,6 @@ Gem::Specification.new do |s|
      "settingslogic.gemspec",
      "spec/settings.rb",
      "spec/settings.yml",
-     "spec/settings2.rb",
-     "spec/settings3.rb",
      "spec/settingslogic_spec.rb",
      "spec/spec_helper.rb"
   ]
@@ -40,8 +38,6 @@ Gem::Specification.new do |s|
   s.summary = %q{A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern.}
   s.test_files = [
     "spec/settings.rb",
-     "spec/settings2.rb",
-     "spec/settings3.rb",
      "spec/settingslogic_spec.rb",
      "spec/spec_helper.rb"
   ]

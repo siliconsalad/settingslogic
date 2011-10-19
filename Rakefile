@@ -4,11 +4,11 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "santuxus-settingslogic"
+    gem.name = "settingslogic"
     gem.summary = "A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern."
-    gem.email = "bjohnson@binarylogic.com, santuxus@gmail.com"
-    gem.homepage = "http://github.com/santuxus/settingslogic"
-    gem.authors = ["Ben Johnson of Binary Logic, Santuxus"]
+    gem.email = "bjohnson@binarylogic.com"
+    gem.homepage = "http://github.com/siliconsalad/settingslogic"
+    gem.authors = ["Ben Johnson of Binary Logic"]
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
