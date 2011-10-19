@@ -161,9 +161,11 @@ Deep merge is used, so settings will be merged on all levels.
 
 == [new] Adding settings in the runtime
 
-It is possible to add additional settings (hash, path_to_file or array_of_paths) by using Settings.load_source().
+It is possible to add additional settings (hash, path_to_file or array_of_paths) by using Settings.load_source(hash_or_file_or_array, section, options).
 This can be useful for example in case of a lib that needs settings. Lib can be loaded with its own settings which
-can be later extended by part of application ones.
+can be later extended by part of application ones. It is possible to pass additional options:
+- {:replace => true} to replace existing settings with the new ones
+- {:deep_delete_nil => true} to deeply delete nil settings, ex. {:a=>{:b=>nil}}.deep_delete_nil => {}
 
 
 == Author

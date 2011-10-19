@@ -131,6 +131,7 @@ class Settingslogic < Hash
     else
       merge_settings_from_files([hash_or_file_or_array], options)
     end
+    hash.deep_delete_nil if options[:deep_delete_nil]
     options[:replace] ? self.replace(hash) : self.deep_merge!(hash)
     @section = section || self.class.source  # so end of error says "in application.yml"
     create_accessors!
@@ -150,7 +151,6 @@ class Settingslogic < Hash
           tmp_hash = {}
         end
         sum.deep_merge!(tmp_hash)
-        sum.deep_delete_nil if options[:deep_delete_nil]
       end
       sum
     end
