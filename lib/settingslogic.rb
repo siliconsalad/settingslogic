@@ -9,6 +9,7 @@ class Hash
     end
     self
   end
+
   def deep_delete_nil
     delete_if{|k, v| v.nil? or v.instance_of?(Hash) && v.deep_delete_nil.empty?}
   end
@@ -16,7 +17,7 @@ end
 
 # A simple settings solution using a YAML file. See README for more information.
 class Settingslogic < Hash
-  class MissingSetting < StandardError; end 
+  class MissingSetting < StandardError; end
   class InvalidSettingsFile < StandardError; end
 
   class << self
@@ -34,12 +35,12 @@ class Settingslogic < Hash
       curs
     end
 
-    def source(*value)
-      #puts "source! #{value}"
+    def source(value = nil)
+      #puts "source! #{value.inspect}"
       if value.nil? || value.empty?
-        @sources
+        @source
       else
-        @sources= value
+        @source = value
       end
     end
 
@@ -107,74 +108,49 @@ class Settingslogic < Hash
   #   Settings.new(:config1 => 1, :config2 => 2)
   #   Settings.new(["defaults.yml", "test.yml"]) # will look for defaults.yml and test.yml and merge them
   #
-  # Basically if you pass a symbol it will look for that file in the configs directory of your rails app,
-  # if you are using this in rails. If you pass a string it should be an absolute path to your settings file.
+  # Basically if you pass a symbol it will look for that file in the configs directory of your rails app, if you are using this in rails.
+  # If you pass a string it should be an absolute path to your settings file.
+  # If you pass an array, it should have strings that are absolute paths to your settings files.
   # Then you can pass a hash, and it just allows you to access the hash via methods.
-  def initialize(hash_or_file = self.class.source, section = nil)
-    load_source(hash_or_file, section)
+  #
+  # Options
+  # - deep_delete_nil: remove nil values from hash ex. {:a=>{:b=>nil}}.deep_delete_nil => {}
+  # - replace: if true, replace existing value, by new one, otherwise merge
+  def initialize(hash_or_file_or_array = self.class.source, section = nil, options={})
+    load_source(hash_or_file_or_array, section, {:replace => true}.merge(options))
   end
 
-  # Initializes a new settings object. You can initialize an object in any of the following ways:
-  #
-  #   Settings.load_source(:application) # will look for config/application.yml
-  #   Settings.load_source("application.yaml") # will look for application.yaml
-  #   Settings.load_source("/var/configs/application.yml") # will look for /var/configs/application.yml
-  #   Settings.load_source(:config1 => 1, :config2 => 2)
-  #   Settings.load_source(["defaults.yml", "test.yml"]) # will look for defaults.yml and test.yml and merge them
-  #
-  # Basically if you pass a symbol it will look for that file in the configs directory of your rails app,
-  # if you are using this in rails. If you pass a string it should be an absolute path to your settings file.
-  # Then you can pass a hash, and it just allows you to access the hash via methods.
-  def load_source(hash_or_file_or_array, section = nil)
-    case hash_or_file_or_array
+  def load_source(hash_or_file_or_array, section = nil, options={})
+    hash = case hash_or_file_or_array
     when nil
       raise Errno::ENOENT, "No file specified as Settingslogic source"
     when Hash
-      self.replace hash_or_file_or_array
+      hash_or_file_or_array
     when Array
-      hash = {}                                            
-      ignore_load_error = false
-      hash_or_file_or_array.each_with_index do |filename, n|
-        #puts "loading from #{filename}"                    
-        ignore_load_error = (n!=0)
-        hash.deep_merge!(load_into_hash(filename, ignore_load_error).deep_delete_nil)
-      end
-      self.replace hash
+      merge_settings_from_files(hash_or_file_or_array, options)
     else
-      hash = load_into_hash(hash_or_file_or_array)
-      self.replace hash
+      merge_settings_from_files([hash_or_file_or_array], options)
     end
+    options[:replace] ? self.replace(hash) : self.deep_merge!(hash)
     @section = section || self.class.source  # so end of error says "in application.yml"
-    if @section.is_a?(Array) 
-      @section = @section.first # TODO: is there a better way to preserve which file was used?
-    end
     create_accessors!
   end
 
-  def load_into_hash(file, ignore_on_error=false)  
-    unless FileTest.exist?(file) 
-      if ignore_on_error 
-        return {}
-      else
-        raise InvalidSettingsFile, file
+  # For each array element - if file exists, parse it to hash
+  # if namespace is present take only specified part
+  def merge_settings_from_files(array, options={})
+    hash = array.inject({}) do |sum, file|
+      if File.exists?(file)
+        tmp_hash = YAML.load(ERB.new(File.read(file)).result).to_hash
+        if self.class.namespace
+          tmp_hash = tmp_hash[self.class.namespace] || {}
+        end
+        sum.deep_merge!(tmp_hash)
+        sum.deep_delete_nil if options[:deep_delete_nil]
       end
+      sum
     end
-
-    #puts "\n\nloading into hash from #{file} (namespace: #{self.class.namespace}) (ignore_error: #{ignore_on_error})"  
-    begin
-      hash = YAML.load(ERB.new(File.read(file)).result).to_hash
-    rescue Exception => ex       
-      #puts ex.inspect  
-      #puts "ignoring? #{ignore_on_error}"
-      if ignore_on_error 
-        return {}
-      else
-        raise InvalidSettingsFile, file
-      end
-    end
-    if self.class.namespace
-      hash = hash[self.class.namespace] or raise MissingSetting, "Missing setting '#{self.class.namespace}' in #{file}"
-    end
+    raise InvalidSettingsFile, "No correct settings in any of files #{array.inspect}" if hash.empty?
     hash
   end
 
@@ -224,4 +200,8 @@ class Settingslogic < Hash
       end
     EndEval
   end
+end
+
+class Settings < Settingslogic
+  source ['spec/settings.yml', 'spec/settings2.yml', 'spec/settings3.yml']
 end
