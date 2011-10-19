@@ -44,32 +44,50 @@ describe "Settingslogic" do
     Settings3.collides.does.should == 'not'
   end
 
-  it "should override with local settings" do
-    Settings4.setting2.should == 10
+# multiple settings sources
+  it "should override previous settings with next in array" do
+    Settings4.setting2.should == "overwritten!"
   end
 
-  it "should override with local nested settings" do
-    Settings4.going.going.and.should == "gone"
-  end   
-  
-  it "should not raise error for missing or invalid additional files" do
-    Settings4a.setting1.setting1_child.should == "saweet" 
+  it "should override previous settings with next in array (deep)" do
+    Settings4.level0.level1.is.should == "from_settings2"
   end
 
-  it "should raise an error for a missing initial file" do
+  it "should not raise error when at least one file is present and valid" do
+    Settings5.name.should == "test"
+  end
+
+  it "should raise an error when none of the files is present and valid" do
     begin
-      Settings4b.setting1
+      Settings6.name
     rescue => e
       e.should be_kind_of Settingslogic::InvalidSettingsFile
     end
   end
 
-  it "should raise an error for an invalid initial file" do
-    begin
-      Settings4c.setting1
-    rescue => e
-      e.should be_kind_of Settingslogic::InvalidSettingsFile
-    end
+  it "should accept an array of file names as a source argument and load all of them" do
+    Settings4.setting1.setting1_child.should == "saweet"
+    Settings4.setting4.should == "from settings2.yml"
+    Settings4.another_setting.should == "from settings3.yml"
+  end
+
+# loading additional settings in the runtime
+  it "should merge hash into existing settings" do
+    Settings.load_source({"level0" => {"level1" => {"added" => 'this'}}})
+    Settings.level0.level1.is.should == 'from_settings'
+    Settings.level0.level1.added.should == 'this'
+  end
+
+  it "should merge file into existing settings" do
+    Settings.load_source("#{File.dirname(__FILE__)}/settings2.yml")
+    Settings.setting1.setting1_child.should == "saweet"
+    Settings.setting4.should == "from settings2.yml"
+  end
+
+  it "should merge array of files into existing settings" do
+    Settings.load_source(["#{File.dirname(__FILE__)}/settings2.yml", "#{File.dirname(__FILE__)}/settings3.yml"])
+    Settings.setting1.setting1_child.should == "saweet"
+    Settings.another_setting.should == "from settings3.yml"
   end
 
   it "should raise a helpful error message" do
@@ -133,13 +151,6 @@ describe "Settingslogic" do
       e.should be_kind_of Errno::ENOENT
     end
     e.should_not be_nil
-  end
-
-  it "should accept an array of file names as a source argument and load all of them" do
-    Settings4.setting1.setting1_child.should == "saweet"
-    Settings4.setting2.should == "overwritten!"
-    Settings4.setting4.should == "from settings2.yml"
-    Settings4.another_setting.should == "from settings3.yml"
   end
 
   # This one edge case currently does not pass, because it requires very

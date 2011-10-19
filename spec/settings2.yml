@@ -1,2 +1,5 @@
 setting2: overwritten!
 setting4: from settings2.yml
+level0:
+  level1:
+    is: from_settings2

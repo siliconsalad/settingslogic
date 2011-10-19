@@ -141,9 +141,13 @@ class Settingslogic < Hash
   def merge_settings_from_files(array, options={})
     hash = array.inject({}) do |sum, file|
       if File.exists?(file)
-        tmp_hash = YAML.load(ERB.new(File.read(file)).result).to_hash
-        if self.class.namespace
-          tmp_hash = tmp_hash[self.class.namespace] || {}
+        begin
+          tmp_hash = YAML.load(ERB.new(File.read(file)).result).to_hash
+          if self.class.namespace
+            tmp_hash = tmp_hash[self.class.namespace] || {}
+          end
+        rescue
+          tmp_hash = {}
         end
         sum.deep_merge!(tmp_hash)
         sum.deep_delete_nil if options[:deep_delete_nil]

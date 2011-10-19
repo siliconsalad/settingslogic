@@ -10,9 +10,9 @@ setting2: 5
 setting3: <%= 5 * 5 %>
 name: test
 
-going:
-  going: 
-    and: going
+level0:
+  level1:
+    is: from_settings
 
 language:
   haskell:
