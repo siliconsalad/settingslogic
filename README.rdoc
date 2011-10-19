@@ -146,7 +146,7 @@ Finally, you can reload all your settings later as well:
 
 This is useful if you want to support changing your settings YAML without restarting your app.
 
-== Array of source files (Santuxus change)
+== [new] Array of source files
 
 This change allows you to set multiple source files. The main purpose behind adding it was to avoid the huge size of
 application.yml. Now you can simply have 'defaults.yml', 'production.yml', 'development.yml' and so on. In your class
@@ -157,8 +157,13 @@ you can have something like:
   end
 
 Sources are merged in the same order as they are positioned in the array; later settings overwrite earlier ones.
-This solution is somehow equivalent to namespaces, but allows to separate source in different files (thus namespaces
-don't provide any advantage here).
+Deep merge is used, so settings will be merged on all levels.
+
+== [new] Adding settings in the runtime
+
+It is possible to add additional settings (hash, path_to_file or array_of_paths) by using Settings.load_source().
+This can be useful for example in case of a lib that needs settings. Lib can be loaded with its own settings which
+can be later extended by part of application ones.
 
 
 == Author
