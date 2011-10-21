@@ -205,7 +205,3 @@ class Settingslogic < Hash
     EndEval
   end
 end
-
-class Settings < Settingslogic
-  source ['spec/settings.yml', 'spec/settings2.yml', 'spec/settings3.yml']
-end
