@@ -198,9 +198,9 @@ class Settingslogic < Hash
     self.class.class_eval <<-EndEval
       def #{key}
         return @#{key} if @#{key}
-        raise MissingSetting, "Missing setting '#{key}' in #{@section}" unless has_key? '#{key}'
+        raise MissingSetting, "Missing setting '#{key}' in " + @section.to_s unless has_key? '#{key}'
         value = fetch('#{key}')
-        @#{key} = value.is_a?(Hash) ? self.class.new(value, "'#{key}' section in #{@section}") : value
+        @#{key} = value.is_a?(Hash) ? self.class.new(value, "'#{key}' section in "+ @section.to_s) : value
       end
     EndEval
   end
