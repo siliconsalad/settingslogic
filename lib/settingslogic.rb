@@ -152,9 +152,7 @@ class Settingslogic < Hash
     hash = array.inject({}) do |sum, file|
       if File.exists?(file)
         begin
-          puts 'wtf?'
           tmp_hash = YAML.load(ERB.new(open(file).read).result).to_hash
-          puts 'why not catched?'
           if self.class.namespace
             tmp_hash = tmp_hash[self.class.namespace] || {}
           end
