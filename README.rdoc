@@ -55,7 +55,7 @@ to a key in the YAML file.
 
 Using a namespace allows us to change our configuration depending on our environment:
 
-  # app/config/application.yml
+  # config/application.yml
   defaults: &defaults
     cool:
       saweet: nested settings
@@ -71,6 +71,12 @@ Using a namespace allows us to change our configuration depending on our environ
 
   production:
     <<: *defaults
+
+_Note_: Certain Ruby/Bundler versions include a version of the Psych YAML parser which incorrectly handles merges (the `<<` in the example above.) 
+If your default settings seem to be overwriting your environment-specific settings, including the following lines in your config/boot.rb file may solve the problem:
+
+  require 'yaml'
+  YAML::ENGINE.yamler= 'syck'
 
 === 3. Access your settings
 
@@ -120,6 +126,22 @@ Modifying our model example:
   
 This would allow you to specify a custom value for per_page just for posts, or
 to fall back to your default value if not specified.
+
+=== 5. Suppressing Exceptions Conditionally
+
+Raising exceptions for missing settings helps highlight configuration problems.  However, in a
+Rails app it may make sense to suppress this in production and return nil for missing settings.
+While it's useful to stop and highlight an error in development or test environments, this is
+often not the right answer for production.
+
+  class Settings < Settingslogic
+    source "#{Rails.root}/config/application.yml"
+    namespace Rails.env
+    suppress_errors Rails.env.production?
+  end
+
+  >> Settings.non_existent_key
+  => nil
 
 == Note on Sinatra / Capistrano / Vlad
 

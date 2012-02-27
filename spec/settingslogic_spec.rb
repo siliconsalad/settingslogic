@@ -4,11 +4,11 @@ describe "Settingslogic" do
   it "should access settings" do
     Settings.setting2.should == 5
   end
-  
+
   it "should access nested settings" do
     Settings.setting1.setting1_child.should == "saweet"
   end
-  
+
   it "should access deep nested settings" do
     Settings.setting1.deep.another.should == "my value"
   end
@@ -35,7 +35,7 @@ describe "Settingslogic" do
     Settings.language.haskell.paradigm.should == 'functional'
     Settings.language.smalltalk.paradigm.should == 'object oriented'
   end
-  
+
   it "should not collide with global methods" do
     Settings3.nested.collides.does.should == 'not either'
     Settings3[:nested] = 'fooey'
@@ -119,7 +119,7 @@ describe "Settingslogic" do
     end
     e.should_not be_nil
     e.message.should =~ /Missing setting 'erlang' in 'language' section/
-    
+
     Settings.language['erlang'].should be_nil
     Settings.language['erlang'] = 5
     Settings.language['erlang'].should == 5
@@ -153,6 +153,10 @@ describe "Settingslogic" do
     e.should_not be_nil
   end
 
+  it "should allow suppressing errors" do
+    Settings7.non_existent_key.should be_nil
+  end
+
   # This one edge case currently does not pass, because it requires very
   # esoteric code in order to make it pass.  It was judged not worth fixing,
   # as it introduces significant complexity for minor gain.
@@ -179,9 +183,26 @@ describe "Settingslogic" do
     Settings.get('setting1.deep.child.value').should == 2
   end
 
+  # If .name is not a property, delegate to superclass
+  it "should respond with Module.name" do
+    Settings2.name.should == "Settings2"
+  end
+
+  # If .name is called on Settingslogic itself, handle appropriately
+  # by delegating to Hash
+  it "should have the parent class always respond with Module.name" do
+    Settingslogic.name.should == 'Settingslogic'
+  end
+
+  # If .name is a property, respond with that instead of delegating to superclass
+  it "should allow a name setting to be overriden" do
+    Settings.name.should == 'test'
+  end
+
   # Put this test last or else call to .instance will load @instance,
   # masking bugs.
   it "should be a hash" do
     Settings.send(:instance).should be_is_a(Hash)
   end
+
 end

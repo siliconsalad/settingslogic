@@ -1,5 +1,6 @@
 require "yaml"
 require "erb"
+require 'open-uri'
 
 class Hash
   def deep_merge!(other_hash)
@@ -22,7 +23,7 @@ class Settingslogic < Hash
 
   class << self
     def name # :nodoc:
-      instance.key?("name") ? instance.name : super
+      self.superclass != Hash && instance.key?("name") ? instance.name : super
     end
 
     # Enables Settings.get('nested.key.name') for dynamic access
@@ -51,7 +52,15 @@ class Settingslogic < Hash
         @namespace = value
       end
     end
-    
+
+    def suppress_errors(value = nil)
+      if value.nil?
+        @suppress_errors
+      else
+        @suppress_errors = value
+      end
+    end
+
     def [](key)
       instance.fetch(key.to_s, nil)
     end
@@ -67,12 +76,12 @@ class Settingslogic < Hash
       instance
       true
     end
-    
+
     def reload!
       @instance = nil
       load!
     end
-    
+
     private
       def instance
         return @instance if @instance
@@ -80,7 +89,7 @@ class Settingslogic < Hash
         create_accessors!
         @instance
       end
-      
+
       def method_missing(name, *args, &block)
         instance.send(name, *args, &block)
       end
@@ -143,11 +152,16 @@ class Settingslogic < Hash
     hash = array.inject({}) do |sum, file|
       if File.exists?(file)
         begin
-          tmp_hash = YAML.load(ERB.new(File.read(file)).result).to_hash
+          puts 'wtf?'
+          tmp_hash = YAML.load(ERB.new(open(file).read).result).to_hash
+          puts 'why not catched?'
           if self.class.namespace
             tmp_hash = tmp_hash[self.class.namespace] || {}
           end
         rescue
+          tmp_hash = {}
+        # https://github.com/tenderlove/psych/issues/23 (Psych::SyntaxError doesn't inherit from StandardError)
+        rescue Psych::SyntaxError
           tmp_hash = {}
         end
         sum.deep_merge!(tmp_hash)
@@ -162,7 +176,7 @@ class Settingslogic < Hash
   # Otherwise, create_accessors! (called by new) will have created actual methods for each key.
   def method_missing(name, *args, &block)
     key = name.to_s
-    raise MissingSetting, "Missing setting '#{key}' in #{@section}" unless has_key? key
+    return missing_key("Missing setting '#{key}' in #{@section}") unless has_key? key
     value = fetch(key)
     create_accessor_for(key)
     value.is_a?(Hash) ? self.class.new(value, "'#{key}' section in #{@section}") : value
@@ -198,10 +212,16 @@ class Settingslogic < Hash
     self.class.class_eval <<-EndEval
       def #{key}
         return @#{key} if @#{key}
-        raise MissingSetting, "Missing setting '#{key}' in " + @section.to_s unless has_key? '#{key}'
+        return missing_key("Missing setting '#{key}' in " + @section.to_s) unless has_key? '#{key}'
         value = fetch('#{key}')
         @#{key} = value.is_a?(Hash) ? self.class.new(value, "'#{key}' section in "+ @section.to_s) : value
       end
     EndEval
+  end
+
+  def missing_key(msg)
+    return nil if self.class.suppress_errors
+
+    raise MissingSetting, msg
   end
 end

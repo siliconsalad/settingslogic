@@ -1,3 +1,2 @@
 setting1: invalid_value
   when: nesting
-  

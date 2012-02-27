@@ -29,3 +29,8 @@ end
 class Settings6 < Settingslogic
   source ["#{File.dirname(__FILE__)}/settings_invalid.yml", "#{File.dirname(__FILE__)}/non_exisiting.yml"]
 end
+
+class Settings7 < Settingslogic
+  source "#{File.dirname(__FILE__)}/settings.yml"
+  suppress_errors true
+end
